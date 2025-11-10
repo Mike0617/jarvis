@@ -46,8 +46,8 @@
 ```
 
 ### 專案導航
-- **caster-web 專案**: `/Users/miketseng/Documents/project/web-agent`
-- **s8_agent 專案**: `/Users/miketseng/Documents/lara/s8_agent`
+- **caster-web 專案**: `/Volumes/MAX/Project/Caster-Web`
+- **s8_agent 專案**: `/Volumes/MAX/lara/s8_agent`
 
 ## 開發標準
 
