@@ -46,7 +46,19 @@
       "Bash(hdiutil attach:*)",
       "Bash(for:*)",
       "Bash(do echo -n \"$dir: 本機=\")",
-      "Bash(du:*)"
+      "Bash(du:*)",
+      "Read(//opt/homebrew/etc/**)",
+      "Bash(nginx:*)",
+      "Bash(brew list:*)",
+      "Bash(docker-compose:*)",
+      "Bash(docker exec:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nMerge: 整合系統功能選單與會員管理選單\n\n解決 DevMenu.jsx 衝突，整合以下功能：\n- 保留會員管理選單項目（註冊審核、會員總覽、點數儀表板、存款審核、取款審核）\n- 保留系統功能選單項目（簡訊、標籤、銀行列表、銀行賬戶查詢）\n- 整合側邊欄收合功能（useLayoutStore）\n- 整合響應式設計與視窗大小監聽\n- 預設展開 members 和 system 兩個群組\n- 支援收合模式下的圖示顯示\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Read(//usr/local/bin/**)",
+      "Bash(python3:*)",
+      "Bash(/Users/miketseng/Documents/agent/personal/scripts/main-agent-dispatcher.sh \"後端 MVC 的輸贏報表 v2（路由：/report-v2/win-or-loss）需要在時間區間選擇器中增加「上週」選項。功能需求：以 11 月 5 日為例，點擊「上週」時，時間區間應自動設定為 10-27 00:00:00 至 11-02 23:59:59（即上週日至上週六的完整一週）\")",
+      "Bash(/Volumes/MAX/agent/personal/scripts/main-agent-dispatcher.sh \"後端 MVC 的輸贏報表 v2（路由：/report-v2/win-or-loss）需要在時間區間選擇器中增加「上週」選項。功能需求：以 11 月 5 日為例，點擊「上週」時，時間區間應自動設定為 10-27 00:00:00 至 11-02 23:59:59（即上週日至上週六的完整一週）\")",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

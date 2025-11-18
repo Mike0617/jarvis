@@ -4,7 +4,7 @@
 
 ## 📌 專案資訊
 - **專案路徑**: `../lara/s8_agent`
-- **主分支**: `main`
+- **主分支**: `api_release`
 - **專案類型**: Laravel Web 應用程式 (代理商後台系統)
 - **技術棧**: Laravel 5.3 + PHP 5.6+ + Blade Templates + Bootstrap + jQuery
 - **主要功能**: 代理商管理系統、後台管理介面、API 服務
@@ -268,11 +268,67 @@ public function authorize()
 - [ ] 權限驗證功能正常
 - [ ] 無語法錯誤
 
+## 📝 API 文檔規範 (APIdog)
+
+當用戶說「我要寫 apidog」時，必須提供以下格式的資訊：
+
+### 輸出格式要求
+
+#### 1. 基本資訊
+```
+API 名稱：[功能名稱]
+API 路徑：[HTTP 方法] [路徑]
+權限：[權限代碼]
+```
+
+#### 2. 輸入參數格式
+```
+欄位名稱,型別,是否必填,範例值,說明
+start_at,string,false,2025-11-10 00:00:00,開始時間
+end_at,string,false,2025-11-17 23:59:59,結束時間
+```
+
+#### 3. 成功輸出格式（JSON Schema）
+使用標準 JSON Schema 格式，包含：
+- `type`、`properties`、`required`、`x-apidog-orders`
+- 每個欄位的 `description` 和 `examples`
+- 巢狀物件完整定義
+
+#### 4. 失敗輸出格式（JSON Schema）
+必須包含：
+```json
+{
+    "code": {
+        "type": "integer",
+        "enum": [-2, -3, -4],
+        "x-apidog-enum": [
+            {"value": -2, "name": "錯誤說明"},
+            {"value": -3, "name": "錯誤說明"}
+        ]
+    },
+    "data": {
+        "properties": {
+            "errors": {
+                "type": "object",
+                "description": "驗證錯誤列表"
+            }
+        }
+    }
+}
+```
+
+### 範例參考
+參考完整格式範例：
+- 輸入參數：逗號分隔格式 (name,type,required,example,description)
+- 成功輸出：完整 JSON Schema with x-apidog-orders
+- 失敗輸出：包含 enum 和 x-apidog-enum 的錯誤代碼定義
+
 ## ⚡ 快速指令
 請使用以下格式與我互動：
 - `幫我修改 s8-agent 的功能`
 - `s8-agent 需要新增功能`
 - `檢查 s8-agent 的程式碼品質`
+- `我要寫 apidog` - 輸出 API 文檔格式
 
 ---
 *我會根據你的指示專注於 s8-agent 專案的開發工作，並在完成後主動回報進度。*
