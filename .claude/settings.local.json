@@ -58,7 +58,12 @@
       "Bash(python3:*)",
       "Bash(/Users/miketseng/Documents/agent/personal/scripts/main-agent-dispatcher.sh \"後端 MVC 的輸贏報表 v2（路由：/report-v2/win-or-loss）需要在時間區間選擇器中增加「上週」選項。功能需求：以 11 月 5 日為例，點擊「上週」時，時間區間應自動設定為 10-27 00:00:00 至 11-02 23:59:59（即上週日至上週六的完整一週）\")",
       "Bash(/Volumes/MAX/agent/personal/scripts/main-agent-dispatcher.sh \"後端 MVC 的輸贏報表 v2（路由：/report-v2/win-or-loss）需要在時間區間選擇器中增加「上週」選項。功能需求：以 11 月 5 日為例，點擊「上週」時，時間區間應自動設定為 10-27 00:00:00 至 11-02 23:59:59（即上週日至上週六的完整一週）\")",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(docker ps:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl -s \"http://s8_agent.local/api/agents/4\" -H \"Accept: application/json\")",
+      "Bash(curl:*)",
+      "Bash(php:*)"
     ],
     "deny": [],
     "ask": []

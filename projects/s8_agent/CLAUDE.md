@@ -283,9 +283,9 @@ API 路徑：[HTTP 方法] [路徑]
 
 #### 2. 輸入參數格式
 ```
-欄位名稱,型別,是否必填,範例值,說明
-start_at,string,false,2025-11-10 00:00:00,開始時間
-end_at,string,false,2025-11-17 23:59:59,結束時間
+欄位名稱,型別,是否必填,範例值,預設值,說明
+start_at,string,false,2025-11-10 00:00:00,false,開始時間
+end_at,string,false,2025-11-17 23:59:59,false,結束時間
 ```
 
 #### 3. 成功輸出格式（JSON Schema）
@@ -298,30 +298,56 @@ end_at,string,false,2025-11-17 23:59:59,結束時間
 必須包含：
 ```json
 {
-    "code": {
-        "type": "integer",
-        "enum": [-2, -3, -4],
-        "x-apidog-enum": [
-            {"value": -2, "name": "錯誤說明"},
-            {"value": -3, "name": "錯誤說明"}
-        ]
-    },
-    "data": {
-        "properties": {
-            "errors": {
-                "type": "object",
-                "description": "驗證錯誤列表"
-            }
+    "type": "object",
+    "properties": {
+        "code": {
+            "type": "integer",
+            "description": "錯誤代碼",
+            "enum": [-1, -2, -3],
+            "x-apidog-enum": [
+                {"value": -1, "name": "系統錯誤"},
+                {"value": -2, "name": "錯誤說明"},
+                {"value": -3, "name": "錯誤說明"}
+            ]
+        },
+        "message": {
+            "type": "string",
+            "description": "錯誤訊息",
+            "examples": ["錯誤訊息範例"]
+        },
+        "time": {
+            "type": "integer",
+            "description": "時間戳",
+            "examples": [1732780800]
+        },
+        "data": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "description": "驗證錯誤列表",
+                    "examples": [
+                        {
+                            "field_name": ["錯誤訊息1", "錯誤訊息2"]
+                        }
+                    ],
+                    "x-apidog-orders": [],
+                    "properties": {}
+                }
+            },
+            "x-apidog-orders": ["errors"]
         }
-    }
+    },
+    "required": ["code", "message", "time"],
+    "x-apidog-orders": ["code", "message", "time", "data"]
 }
 ```
 
 ### 範例參考
 參考完整格式範例：
-- 輸入參數：逗號分隔格式 (name,type,required,example,description)
+- 輸入參數：逗號分隔格式 (欄位名稱,型別,是否必填,範例值,預設值,說明)
 - 成功輸出：完整 JSON Schema with x-apidog-orders
-- 失敗輸出：包含 enum 和 x-apidog-enum 的錯誤代碼定義
+- 失敗輸出：包含完整結構 (type, properties, required, x-apidog-orders) 與 enum/x-apidog-enum 的錯誤代碼定義，以及 data.errors 驗證錯誤物件
 
 ## ⚡ 快速指令
 請使用以下格式與我互動：
