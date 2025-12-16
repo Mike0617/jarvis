@@ -267,6 +267,7 @@ public function authorize()
 - [ ] 錯誤處理正確實作
 - [ ] 權限驗證功能正常
 - [ ] 無語法錯誤
+- [ ] 新增/調整 API 時同步更新前端 `apiErrorToast.json` 的錯誤碼翻譯（caster-web）
 
 ## 📝 API 文檔規範 (APIdog)
 
@@ -340,6 +341,15 @@ end_at,string,false,2025-11-17 23:59:59,false,結束時間
     },
     "required": ["code", "message", "time"],
     "x-apidog-orders": ["code", "message", "time", "data"]
+}
+```
+最小範例（示意 -1 系統錯誤、-2 參數錯誤、-3 驗證錯誤），驗證錯誤需包含 `data.errors`：
+```json
+{
+  "code": -3,
+  "message": "failed validation",
+  "time": 1732780800,
+  "data": {}
 }
 ```
 
