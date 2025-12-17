@@ -42,7 +42,7 @@ HTTP status 可依情境不同（200 成功、400/422 驗證錯誤、550 系統�
   "message": "success",
   "time": 1758005045,
   "data": {
-    "items": [...],           // 實際資料陣列
+    "items": [...],           // 實際資料陣列（依模組命名，如 withdraws, deposits, users）
     "pagination": {
       "current_page": 1,      // 當前頁碼
       "last_page": 10,        // 最後一頁
@@ -53,17 +53,71 @@ HTTP status 可依情境不同（200 成功、400/422 驗證錯誤、550 系統�
 }
 ```
 
-### 分頁欄位說明
-- **current_page**: 當前頁碼，從 1 開始
-- **last_page**: 最後一頁頁碼（由 ceil(total/per_page) 計算）
-- **per_page**: 每頁資料筆數
-- **total**: 符合條件的資料總筆數
+### 欄位定義與順序（強制）
 
-### 前端計算
-其他分頁資訊可透過這4個基礎值計算：
-- 是否有下一頁: `current_page < last_page`
-- 本頁起始位置: `(current_page - 1) * per_page + 1`
-- 本頁結束位置: `min(current_page * per_page, total)`
+**必須按照此順序**：
+```php
+'pagination' => [
+    'current_page' => $paginator->currentPage(),  // 1. 當前頁碼（從 1 開始）
+    'last_page' => $paginator->lastPage(),        // 2. 最後一頁（ceil(total/per_page)）
+    'per_page' => $paginator->perPage(),          // 3. 每頁筆數
+    'total' => $paginator->total(),               // 4. 總筆數
+]
+```
+
+**順序理由**：頁碼相關欄位 (`current_page`, `last_page`) 放在一起，符合邏輯順序
+
+### ⚠️ 禁止事項
+- ❌ `total_pages` - 必須使用 `last_page`
+- ❌ `total_count` - 必須使用 `total`
+- ❌ 扁平化結構（分頁欄位直接放在根層級）
+- ❌ 欄位順序錯誤（如 `per_page` 在 `last_page` 之前）
+
+### 前端計算公式
+```javascript
+// 是否有下一頁
+hasNextPage = current_page < last_page
+
+// 本頁資料範圍
+startIndex = (current_page - 1) * per_page + 1
+endIndex = Math.min(current_page * per_page, total)
+```
+
+### 後端實作範例
+
+#### 方法 1: Response 類別（推薦）
+```php
+// Controller
+$response = app(WithdrawResponse::class);
+return json_response()->success($response->paginated($paginator, $options));
+
+// Response 類別
+public function paginated($paginator, array $options = [])
+{
+    return [
+        'withdraws' => $this->transformCollection($paginator->getCollection(), $options),
+        'pagination' => [
+            'current_page' => $paginator->currentPage(),
+            'last_page' => $paginator->lastPage(),
+            'per_page' => $paginator->perPage(),
+            'total' => $paginator->total()
+        ]
+    ];
+}
+```
+
+#### 方法 2: Controller 直接組裝
+```php
+return json_response()->success([
+    'users' => $users->map(fn($u) => /* 轉換邏輯 */),
+    'pagination' => [
+        'current_page' => $users->currentPage(),
+        'last_page' => $users->lastPage(),
+        'per_page' => $users->perPage(),
+        'total' => $users->total(),
+    ]
+]);
+```
 
 ## 時間格式標準
 
