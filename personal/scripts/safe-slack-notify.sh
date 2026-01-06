@@ -4,8 +4,8 @@
 # 防止刷屏機制的 Slack 通知腳本
 
 # 載入環境變數
-if [ -f "/Users/miketseng/Documents/agent/.env" ]; then
-    export $(cat "/Users/miketseng/Documents/agent/.env" | grep -v '^#' | xargs)
+if [ -f "/Volumes/MAX/agent/.env" ]; then
+    export $(cat "/Volumes/MAX/agent/.env" | grep -v '^#' | xargs)
 fi
 
 # 基本設定（從環境變數讀取）
@@ -17,7 +17,7 @@ ICON_URL="${SLACK_BOT_ICON:-https://i.imgur.com/oNZ4Z8p.png}"
 # 檢查必要的環境變數
 if [ -z "$WEBHOOK_URL" ]; then
     echo "❌ 錯誤: 未設定 SLACK_WEBHOOK_URL 環境變數"
-    echo "請在 /Users/miketseng/Documents/agent/.env 中設定"
+    echo "請在 /Volumes/MAX/agent/.env 中設定"
     exit 1
 fi
 

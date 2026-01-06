@@ -4,8 +4,8 @@
 # Edwin Jarvis Personal Main Agent Task Dispatcher
 
 # 設定
-PROJECTS_DIR="/Users/miketseng/Documents/agent/projects"
-PERSONAL_DIR="/Users/miketseng/Documents/agent/personal"
+PROJECTS_DIR="/Volumes/MAX/agent/projects"
+PERSONAL_DIR="/Volumes/MAX/agent/personal"
 LOG_FILE="/tmp/main_agent_log"
 
 # 輸入參數
@@ -56,13 +56,13 @@ execute_project_agent() {
     
     case "$project" in
         "caster-web")
-            local project_path="/Users/miketseng/Documents/project/web-agent"
+            local project_path="/Volumes/MAX/Project/Caster-Web"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/caster-web/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
                 
                 echo "🤖 啟動 Claude Code 執行任務..." | tee -a "$LOG_FILE"
-                echo "$task" | claude --non-interactive 2>&1 | tee -a "$LOG_FILE"
+                echo "$task" | claude -p 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
                 if [ $exit_code -eq 0 ]; then
@@ -78,13 +78,13 @@ execute_project_agent() {
             fi
             ;;
         "s8_agent")
-            local project_path="/Users/miketseng/Documents/lara/s8_agent"
+            local project_path="/Volumes/MAX/lara/s8_agent"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/s8_agent/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
                 
                 echo "🤖 啟動 Claude Code 執行任務..." | tee -a "$LOG_FILE"
-                echo "$task" | claude --non-interactive 2>&1 | tee -a "$LOG_FILE"
+                echo "$task" | claude -p 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
                 if [ $exit_code -eq 0 ]; then

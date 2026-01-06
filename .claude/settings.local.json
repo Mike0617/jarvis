@@ -63,7 +63,9 @@
       "Bash(npm run dev:*)",
       "Bash(curl -s \"http://s8_agent.local/api/agents/4\" -H \"Accept: application/json\")",
       "Bash(curl:*)",
-      "Bash(php:*)"
+      "Bash(php:*)",
+      "Bash(npx eslint:*)",
+      "Bash(/Volumes/MAX/agent/personal/scripts/main-agent-dispatcher.sh:*)"
     ],
     "deny": [],
     "ask": []
