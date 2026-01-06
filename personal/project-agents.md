@@ -16,7 +16,7 @@
   - 元件驗收清單
   - UI/UX 測試要點
   - API 介接規格
-- **通知**: 透過 `slack-templates.md` 發送到 `#mike-agent`
+- **通知**: 透過 `telegram-templates.md` 發送到 Telegram
 
 ### 🎨 前端開發標準流程
 
@@ -126,7 +126,7 @@
 - [ ] 檢查所有 import 語句和回應格式
 - [ ] 驗證錯誤處理是否符合標準
 - [ ] 測試前後端整合
-- [ ] 使用 Slack 通知完成狀態
+- [ ] 使用 Telegram 通知完成狀態
 
 #### ⚠️ 常見錯誤避免
 - **🚫 絕對禁止** 修改原 MVC 程式碼（包括 Controller、Model、View）

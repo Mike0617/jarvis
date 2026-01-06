@@ -132,10 +132,10 @@ send_main_agent_notification() {
 - 執行結果: 專案代理已完成任務"
     fi
     
-    if [ -f "$PERSONAL_DIR/scripts/safe-slack-notify.sh" ]; then
-        "$PERSONAL_DIR/scripts/safe-slack-notify.sh" "$message"
+    if [ -f "$PERSONAL_DIR/scripts/safe-telegram-notify.sh" ]; then
+        "$PERSONAL_DIR/scripts/safe-telegram-notify.sh" "$message"
     else
-        echo "⚠️  通知腳本不存在，跳過 Slack 通知" | tee -a "$LOG_FILE"
+        echo "⚠️  通知腳本不存在，跳過 Telegram 通知" | tee -a "$LOG_FILE"
     fi
 }
 

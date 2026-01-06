@@ -50,10 +50,10 @@
 - 效能調校
 
 ## 📬 通知機制
-完成任務後會透過 Slack 自動通知：
+完成任務後會透過 Telegram 自動通知：
 
 ### 通知方式
-使用安全防刷腳本：`/Users/miketseng/Documents/agent/personal/scripts/safe-slack-notify.sh`
+使用安全防刷腳本：`/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh`
 
 **防刷機制**：
 - 最少間隔 60 秒才能發送下一則通知
@@ -87,7 +87,7 @@
    - **未完成 Review 不可發送通知**
 
 4. **第四步：Notify Agent**
-   - 使用 `slack-templates.md` 發送完成通知
+   - 使用 `telegram-templates.md` 發送完成通知
    - 包含驗收清單和影響範圍
 
 ## 🔧 工作流程 (子代理分工)
@@ -113,7 +113,7 @@
 - [ ] **確認後才可進行 Notify Agent**
 
 #### ✅ Notify Agent 完成檢查
-- [ ] Slack 通知已發送
+- [ ] Telegram 通知已發送
 - [ ] 包含完整驗收清單
 - [ ] 說明影響範圍和風險
 
@@ -135,7 +135,7 @@
 - 確保符合最佳實踐
 
 #### 📢 Notify Agent (通知子代理)
-- **最後步驟**：使用 `slack-templates.md` 發送 Slack 通知
+- **最後步驟**：使用 `telegram-templates.md` 發送 Telegram 通知
 - 必須包含驗收清單
 
 ### ✅ 執行流程範例（正確示範）
@@ -167,7 +167,7 @@
 └─ ✅ 檢查點通過，可進行下一步
 
 🔴 第四步：Notify Agent
-├─ 使用 safe-slack-notify.sh 發送通知
+├─ 使用 safe-telegram-notify.sh 發送通知
 ├─ 通知內容：「✅ [s8_agent] 優惠審核 API 開發完成」
 ├─ 包含 API 端點清單和權限要求
 └─ ✅ 任務完成
@@ -194,7 +194,7 @@
 └─ ✅ 檢查點通過，可進行下一步
 
 🔴 第四步：Notify Agent
-├─ 使用 safe-slack-notify.sh 發送通知
+├─ 使用 safe-telegram-notify.sh 發送通知
 ├─ 包含完整驗收清單
 └─ ✅ 任務完成
 ```

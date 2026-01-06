@@ -21,7 +21,7 @@
 2. `api-response-standard.md` – API 回應標準格式（必須包含 code/message/data）
 3. `i18n-guidelines.md` – 多語系指導方針（i18next、JSON 結構、fallback）
 4. `review-checklist.md` – 程式碼審查檢查清單（PR 驗收重點）
-5. `slack-templates.md` – Slack 訊息範本（通知格式）
+5. `telegram-templates.md` – Telegram 訊息範本（通知格式）
 6. `project-agents.md` – 專案代理設定總表（ERP、caster-web、s8_user）
 
 ---

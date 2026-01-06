@@ -36,13 +36,13 @@
 ### 任務分派
 ```bash
 # 唯一正確方法 - 透過主代理分派器
-/Users/miketseng/Documents/agent/personal/scripts/main-agent-dispatcher.sh "任務描述"
+/Volumes/MAX/agent/personal/scripts/main-agent-dispatcher.sh "任務描述"
 ```
 
-### Slack 通知
+### Telegram 通知
 ```bash
 # 安全通知（防刷屏保護，60秒冷卻時間）
-/Users/miketseng/Documents/agent/personal/scripts/safe-slack-notify.sh "✅ [專案名稱] 任務完成"
+/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任務完成"
 ```
 
 ### 專案導航
@@ -74,13 +74,13 @@
 1. **Branch Agent**: 建立功能分支（feat/ref/fix/lang）
 2. **Code Agent**: 實現功能（包含 v2/ 路由前綴）
 3. **Review Agent**: 程式碼品質和功能驗證
-4. **Notify Agent**: Slack 通知（包含驗收標準）
+4. **Notify Agent**: Telegram 通知（包含驗收標準）
 
 ## 通知系統
-- **頻道**: `#mike-agent`
-- **防刷屏**: 透過 `safe-slack-notify.sh` 60秒冷卻時間
+- **Chat ID**: `TELEGRAM_CHAT_ID`
+- **防刷屏**: 透過 `safe-telegram-notify.sh` 60秒冷卻時間
 - **格式**: 專案名稱、任務完成詳情、時間範圍
-- **範本**: 定義在 `personal/slack-templates.md`
+- **範本**: 定義在 `personal/telegram-templates.md`
 
 ## 標準文件
 - `personal/api-response-standard.md`: 統一 API 回應格式
