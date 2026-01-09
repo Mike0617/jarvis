@@ -36,7 +36,6 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 - `{{SUBTASKS}}`: 子項目文字（可留空）
 - `{{START_TIME}}`: 開始時間（HH:MM）
 - `{{END_TIME}}`: 完成時間（HH:MM）
-- `{{ESTIMATED_DURATION}}`: 預估用時（HH:MM 或文字）
 - `{{DURATION}}`: 實際用時（HH:MM）
 - `{{RESULT}}`: 執行結果文字
 
@@ -45,7 +44,7 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 {{STATUS_ICON}} [{{PROJECTS}}] 開始通知
 {{TASK}}
 {{SUBTASKS}}
-預計總用時: {{ESTIMATED_DURATION}} | 開始時間: {{START_TIME}}
+開始時間: {{START_TIME}}
 ```
 
 ### 2) 進度通知（含進度與下一步）

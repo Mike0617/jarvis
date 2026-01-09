@@ -7,6 +7,7 @@
 PROJECTS_DIR="/Volumes/MAX/agent/projects"
 PERSONAL_DIR="/Volumes/MAX/agent/personal"
 LOG_FILE="/tmp/main_agent_log"
+AGENT_CMD="${AGENT_CMD:-codex}"
 TEMPLATE_FILE="/Volumes/MAX/agent/personal/telegram-templates.md"
 START_TEMPLATE_KEY="1) 開始通知"
 COMPLETE_TEMPLATE_KEY="3) 完成通知"
@@ -51,6 +52,12 @@ analyze_task() {
     fi
     
     echo "${projects[@]}"
+}
+
+# 判斷是否需要檢查變更（避免回報完成但實際未改檔）
+requires_changes() {
+    local task="$1"
+    echo "$task" | grep -iE "(改|修改|新增|移除|刪除|調整|合併|更新|修正|修復|refactor|refactoring|implement|add|remove|update|fix)" > /dev/null
 }
 
 # 讀取指定模板內容（取出 Markdown code block 內文）
@@ -106,6 +113,27 @@ render_template() {
     printf "%s" "$output"
 }
 
+# 執行代理任務（依代理類型選擇非互動模式）
+run_agent_task() {
+    local task="$1"
+
+    if [ "$AGENT_CMD" = "codex" ]; then
+        if [ -n "$CODEX_PROFILE" ]; then
+            codex exec -p "$CODEX_PROFILE" "$task"
+        else
+            codex exec "$task"
+        fi
+        return $?
+    fi
+
+    if [ "$AGENT_CMD" = "claude" ]; then
+        echo "$task" | claude -p
+        return $?
+    fi
+
+    echo "$task" | "$AGENT_CMD"
+}
+
 # 執行專案代理函數
 execute_project_agent() {
     local project="$1" 
@@ -120,11 +148,19 @@ execute_project_agent() {
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
                 
-                echo "🤖 啟動 Claude Code 執行任務..." | tee -a "$LOG_FILE"
-                echo "$task" | claude -p 2>&1 | tee -a "$LOG_FILE"
+                echo "🤖 啟動 ${AGENT_CMD} 執行任務..." | tee -a "$LOG_FILE"
+                run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
                 if [ $exit_code -eq 0 ]; then
+                    if requires_changes "$task"; then
+                        if git -C "$project_path" rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+                            if [ -z "$(git -C "$project_path" status --porcelain)" ]; then
+                                echo "⚠️  $project 代理回報完成，但未偵測到檔案變更" | tee -a "$LOG_FILE"
+                                return 1
+                            fi
+                        fi
+                    fi
                     echo "✅ $project 代理執行完成" | tee -a "$LOG_FILE"
                     return 0
                 else
@@ -142,8 +178,8 @@ execute_project_agent() {
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
                 
-                echo "🤖 啟動 Claude Code 執行任務..." | tee -a "$LOG_FILE"
-                echo "$task" | claude -p 2>&1 | tee -a "$LOG_FILE"
+                echo "🤖 啟動 ${AGENT_CMD} 執行任務..." | tee -a "$LOG_FILE"
+                run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
                 if [ $exit_code -eq 0 ]; then
