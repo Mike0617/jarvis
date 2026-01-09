@@ -29,14 +29,23 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 
 ## 📌 通知類型與快速範本
 
+## 📌 可用變數
+- `{{STATUS_ICON}}`: 狀態圖示（🚀/✅/❌）
+- `{{PROJECTS}}`: 專案名稱（可多個）
+- `{{TASK}}`: 任務描述
+- `{{SUBTASKS}}`: 子項目文字（可留空）
+- `{{START_TIME}}`: 開始時間（HH:MM）
+- `{{END_TIME}}`: 完成時間（HH:MM）
+- `{{ESTIMATED_DURATION}}`: 預估用時（HH:MM 或文字）
+- `{{DURATION}}`: 實際用時（HH:MM）
+- `{{RESULT}}`: 執行結果文字
+
 ### 1) 開始通知（含子項目清單）
 ```
-🚀 [專案名稱] 開始通知
-任務名稱/目標
-  子項目 A
-  子項目 B
-  子項目 C
-預計總用時: 02:00 | 開始時間: YYYY-MM-DD HH:MM
+{{STATUS_ICON}} [{{PROJECTS}}] 開始通知
+{{TASK}}
+{{SUBTASKS}}
+預計總用時: {{ESTIMATED_DURATION}} | 開始時間: {{START_TIME}}
 ```
 
 ### 2) 進度通知（含進度與下一步）
@@ -51,12 +60,11 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 
 ### 3) 完成通知（含子項目與用時）
 ```
-✅ [專案名稱] 完成通知
-任務名稱/目標
-  子項目 A
-  子項目 B
-  子項目 C
-總用時: 02:10 | 完成時間: YYYY-MM-DD HH:MM
+{{STATUS_ICON}} [{{PROJECTS}}] 完成通知
+{{TASK}}
+{{SUBTASKS}}
+執行結果: {{RESULT}}
+總用時: {{DURATION}} | 完成時間: {{END_TIME}}
 ```
 
 ### 4) 錯誤通知（含完成/剩餘）

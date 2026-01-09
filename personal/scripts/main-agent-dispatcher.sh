@@ -7,6 +7,12 @@
 PROJECTS_DIR="/Volumes/MAX/agent/projects"
 PERSONAL_DIR="/Volumes/MAX/agent/personal"
 LOG_FILE="/tmp/main_agent_log"
+TEMPLATE_FILE="/Volumes/MAX/agent/personal/telegram-templates.md"
+START_TEMPLATE_KEY="1) 開始通知"
+COMPLETE_TEMPLATE_KEY="3) 完成通知"
+
+START_EPOCH=""
+START_TIME=""
 
 # 輸入參數
 TASK_DESCRIPTION="$1"
@@ -41,10 +47,63 @@ analyze_task() {
     # 如果沒有明確匹配，預設給前端（因為目前主要在前端開發）
     if [ ${#projects[@]} -eq 0 ]; then
         projects=("caster-web")
-        echo "⚠️  未明確匹配專案，預設分配給 caster-web" | tee -a "$LOG_FILE"
+        echo "⚠️  未明確匹配專案，預設分配給 caster-web" | tee -a "$LOG_FILE" >&2
     fi
     
     echo "${projects[@]}"
+}
+
+# 讀取指定模板內容（取出 Markdown code block 內文）
+get_template_block() {
+    local key="$1"
+    if [ ! -f "$TEMPLATE_FILE" ]; then
+        return
+    fi
+
+    awk -v key="$key" '
+        $0 ~ "^### " {
+            inblock = ($0 ~ key)
+            incode = 0
+        }
+        inblock && $0 ~ "^```" {
+            if (!incode) { incode=1; next } else { exit }
+        }
+        inblock && incode { print }
+    ' "$TEMPLATE_FILE"
+}
+
+# 格式化耗時（秒 -> HH:MM）
+format_duration() {
+    local seconds="$1"
+    local minutes=$((seconds / 60))
+    local hours=$((minutes / 60))
+    local mins=$((minutes % 60))
+    printf "%02d:%02d" "$hours" "$mins"
+}
+
+# 依模板替換變數
+render_template() {
+    local template="$1"
+    local task="$2"
+    local projects="$3"
+    local start_time="$4"
+    local end_time="$5"
+    local status_icon="$6"
+    local result_text="$7"
+    local duration="$8"
+    local estimated_duration="$9"
+
+    local output="$template"
+    output="${output//\{\{TASK\}\}/$task}"
+    output="${output//\{\{PROJECTS\}\}/$projects}"
+    output="${output//\{\{START_TIME\}\}/$start_time}"
+    output="${output//\{\{END_TIME\}\}/$end_time}"
+    output="${output//\{\{STATUS_ICON\}\}/$status_icon}"
+    output="${output//\{\{RESULT\}\}/$result_text}"
+    output="${output//\{\{DURATION\}\}/$duration}"
+    output="${output//\{\{ESTIMATED_DURATION\}\}/$estimated_duration}"
+    output="${output//\{\{SUBTASKS\}\}/}"
+    printf "%s" "$output"
 }
 
 # 執行專案代理函數
@@ -112,25 +171,54 @@ execute_project_agent() {
 
 # 發送統一通知
 send_main_agent_notification() {
-    local status="$1"
-    local projects="$2" 
+    local phase="$1"
+    local projects="$2"
     local task="$3"
-    local phase="$4" # 新增階段參數：start 或 complete
-    
-    local message
-    if [ "$phase" = "start" ]; then
-        message="🚀 [Edwin Jarvis] 任務開始執行
-- 任務: $task
-- 涉及專案: $projects
-- 開始時間: $(date +%H:%M)
-- 狀態: 正在執行專案代理..."
-    else
-        message="$status [Edwin Jarvis] 任務執行完成
-- 任務: $task
-- 涉及專案: $projects
-- 完成時間: $(date +%H:%M)
-- 執行結果: 專案代理已完成任務"
+    local success="$4"
+
+    local status_icon="🚀"
+    local result_text="專案代理已完成任務"
+    local end_time=""
+    local duration=""
+
+    if [ "$phase" = "complete" ]; then
+        if [ "$success" = "1" ]; then
+            status_icon="✅"
+            result_text="專案代理已完成任務"
+        else
+            status_icon="❌"
+            result_text="部分專案代理執行失敗"
+        fi
+        end_time=$(date +%H:%M)
+        if [ -n "$START_EPOCH" ]; then
+            duration=$(format_duration $(( $(date +%s) - START_EPOCH )))
+        else
+            duration="00:00"
+        fi
     fi
+
+    local template
+    if [ "$phase" = "start" ]; then
+        template=$(get_template_block "$START_TEMPLATE_KEY")
+    else
+        template=$(get_template_block "$COMPLETE_TEMPLATE_KEY")
+    fi
+
+    local message
+    if [ -z "$template" ]; then
+        echo "❌ 找不到 Telegram 模板，請檢查 $TEMPLATE_FILE" | tee -a "$LOG_FILE"
+        return
+    fi
+
+    message=$(render_template "$template" \
+        "$task" \
+        "$projects" \
+        "$START_TIME" \
+        "$end_time" \
+        "$status_icon" \
+        "$result_text" \
+        "$duration" \
+        "未估")
     
     if [ -f "$PERSONAL_DIR/scripts/safe-telegram-notify.sh" ]; then
         "$PERSONAL_DIR/scripts/safe-telegram-notify.sh" "$message"
@@ -142,6 +230,9 @@ send_main_agent_notification() {
 # 主要執行流程
 main() {
     echo "🧠 分析任務中..." | tee -a "$LOG_FILE"
+
+    START_EPOCH=$(date +%s)
+    START_TIME=$(date +%H:%M)
     
     # 分析任務
     INVOLVED_PROJECTS=($(analyze_task "$TASK_DESCRIPTION"))
@@ -150,7 +241,7 @@ main() {
     echo "📋 涉及專案: $PROJECTS_STR" | tee -a "$LOG_FILE"
     
     # 發送開始通知
-    send_main_agent_notification "🚀" "$PROJECTS_STR" "$TASK_DESCRIPTION" "start"
+    send_main_agent_notification "start" "$PROJECTS_STR" "$TASK_DESCRIPTION" ""
     
     # 執行各專案代理
     SUCCESS_COUNT=0
@@ -166,10 +257,10 @@ main() {
     
     # 發送完成通知
     if [ $SUCCESS_COUNT -eq $TOTAL_PROJECTS ]; then
-        send_main_agent_notification "✅" "$PROJECTS_STR" "$TASK_DESCRIPTION" "complete"
+        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "1"
         echo "🎉 Edwin Jarvis 任務執行完成！" | tee -a "$LOG_FILE"
     else
-        send_main_agent_notification "❌" "$PROJECTS_STR" "$TASK_DESCRIPTION" "complete"  
+        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "0"
         echo "⚠️  部分專案代理執行失敗，請檢查日誌" | tee -a "$LOG_FILE"
         exit 1
     fi
