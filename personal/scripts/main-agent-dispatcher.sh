@@ -276,8 +276,7 @@ main() {
     
     echo "📋 涉及專案: $PROJECTS_STR" | tee -a "$LOG_FILE"
     
-    # 發送開始通知
-    send_main_agent_notification "start" "$PROJECTS_STR" "$TASK_DESCRIPTION" ""
+    # 開始通知已停用，僅由子代理發送結果通知
     
     # 執行各專案代理
     SUCCESS_COUNT=0
@@ -291,12 +290,10 @@ main() {
     TOTAL_PROJECTS=${#INVOLVED_PROJECTS[@]}
     echo "📊 執行結果: $SUCCESS_COUNT/$TOTAL_PROJECTS 個專案代理成功" | tee -a "$LOG_FILE"
     
-    # 發送完成通知
+    # 主代理不發送完成通知；結果通知由子代理負責
     if [ $SUCCESS_COUNT -eq $TOTAL_PROJECTS ]; then
-        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "1"
         echo "🎉 Edwin Jarvis 任務執行完成！" | tee -a "$LOG_FILE"
     else
-        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "0"
         echo "⚠️  部分專案代理執行失敗，請檢查日誌" | tee -a "$LOG_FILE"
         exit 1
     fi

@@ -77,6 +77,15 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 錯誤時間: YYYY-MM-DD HH:MM
 ```
 
+### 5) 結果通知（固定格式）
+```
+✅ [專案名稱] 完成通知
+- 任務: 任務描述
+- 結果: 最終結論或處理結果
+- 依據: 檔案/路由/紀錄等依據
+- 完成時間: HH:MM
+```
+
 ### Claude 通知（可直接套用上方格式）
 ```bash
 /Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh "✅ [project-name] 主任務完成
@@ -85,35 +94,6 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 - 完成時間: HH:MM"
 ```
 
-## 📌 通知格式說明
-
-### 訊息結構
-```
-✅ [專案名稱] 任務完成/受阻
-- 完成內容: 具體做了什麼
-- 開始時間: HH:MM
-- 完成時間: HH:MM
-```
-
 ### 專案名稱代碼
 - `[caster-web]` - 後台前端
 - `[s8-agent]` - 後台後端、後台 MVC
-
-### 實際範例
-```
-✅ [caster-web] 任務完成
-- 完成內容: 新增會員註冊 API 端點
-- 開始時間: 09:15
-- 完成時間: 09:45
-
-❌ [erp-system] 任務受阻  
-- 問題: 資料庫連線設定檔不存在
-- 開始時間: 10:30
-- 受阻時間: 10:35
-```
-
-### 專案名稱範例
-- `[caster-web]` - 你的網站專案
-- `[erp-system]` - ERP 系統
-
-> ⚠️ 建議將 Telegram Token/Chat ID 設為環境變數，避免泄漏
