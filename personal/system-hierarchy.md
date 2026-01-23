@@ -100,8 +100,8 @@
 ---
 
 ## 相關檔案
-- 會員詳情實作: `/Users/miketseng/Documents/lara/s8_agent/app/Http/Api/Controllers/Member/MemberDetailController.php`
-- 前端顯示: `/Users/miketseng/Documents/project/web-agent/src/pages/members/detail/BasicInfo.jsx`
+- 會員詳情實作: `${S8_AGENT_PATH}/app/Http/Api/Controllers/Member/MemberDetailController.php`
+- 前端顯示: `${CASTER_WEB_PATH}/src/pages/members/detail/BasicInfo.jsx`
 - 專案代理規範: `personal/project-agents.md`
 
 ---

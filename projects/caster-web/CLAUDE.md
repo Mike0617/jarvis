@@ -3,7 +3,7 @@
 我是 **caster-web** 專案的專案代理人，專門負責這個前端專案的開發與維護。由主代理系統調度執行前端相關任務。
 
 ## 📌 專案資訊
-- **專案路徑**: `/Volumes/MAX/Project/Caster-Web`
+- **專案路徑**: `${CASTER_WEB_PATH}`
 - **主分支**: `main`
 - **專案類型**: 前端 Web 應用程式  
 - **技術棧**: React + Vite + Zustand + SCSS/Tailwind
@@ -39,7 +39,7 @@
 完成任務後會透過 Telegram 自動通知：
 
 ### 通知方式
-使用安全防刷腳本：`/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh`
+使用安全防刷腳本：`${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh`
 
 **防刷機制**：
 - 最少間隔 60 秒才能發送下一則通知

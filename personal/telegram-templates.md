@@ -1,7 +1,7 @@
 # Telegram 訊息範本
 
 ## 📌 基本設定
-環境變數已配置在 `/Volumes/MAX/agent/.env`：
+環境變數已配置在 `${AGENT_ROOT}/.env`：
 - `TELEGRAM_BOT_TOKEN`: Telegram Bot Token
 - `TELEGRAM_CHAT_ID`: Telegram Chat ID
 - `TELEGRAM_MIN_INTERVAL`: 最少間隔秒數（選用，預設 1 秒）
@@ -13,7 +13,7 @@
 ### 🛡️ 佇列式安全腳本（推薦）
 ```bash
 # 使用佇列腳本發送通知（避免通知被略過）
-/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh "✅ [caster-web] 任務完成
+${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [caster-web] 任務完成
 - 完成內容: 修改登入頁面樣式
 - 開始時間: 14:30
 - 完成時間: 14:45"
@@ -88,7 +88,7 @@ curl -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
 
 ### Claude 通知（可直接套用上方格式）
 ```bash
-/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh "✅ [project-name] 主任務完成
+${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [project-name] 主任務完成
 - 子項目: 子項目 A、子項目 B
 - 總用時: 01:20
 - 完成時間: HH:MM"

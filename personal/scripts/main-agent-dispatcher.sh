@@ -3,12 +3,21 @@
 # Edwin Jarvis - 個人主代理任務分配腳本
 # Edwin Jarvis Personal Main Agent Task Dispatcher
 
+# 載入環境變數（支援集中管理路徑）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AGENT_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENV_FILE="$AGENT_ROOT_DEFAULT/.env"
+if [ -f "$ENV_FILE" ]; then
+    export $(grep -v '^#' "$ENV_FILE" | xargs)
+fi
+
 # 設定
-PROJECTS_DIR="/Volumes/MAX/agent/projects"
-PERSONAL_DIR="/Volumes/MAX/agent/personal"
+AGENT_ROOT="${AGENT_ROOT:-$AGENT_ROOT_DEFAULT}"
+PROJECTS_DIR="$AGENT_ROOT/projects"
+PERSONAL_DIR="$AGENT_ROOT/personal"
 LOG_FILE="/tmp/main_agent_log"
 AGENT_CMD="${AGENT_CMD:-codex}"
-TEMPLATE_FILE="/Volumes/MAX/agent/personal/telegram-templates.md"
+TEMPLATE_FILE="$PERSONAL_DIR/telegram-templates.md"
 START_TEMPLATE_KEY="1) 開始通知"
 COMPLETE_TEMPLATE_KEY="3) 完成通知"
 
@@ -143,7 +152,7 @@ execute_project_agent() {
     
     case "$project" in
         "caster-web")
-            local project_path="/Volumes/MAX/Project/Caster-Web"
+            local project_path="${CASTER_WEB_PATH:-/Volumes/MAX/Project/Caster-Web}"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/caster-web/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
@@ -173,7 +182,7 @@ execute_project_agent() {
             fi
             ;;
         "s8_agent")
-            local project_path="/Volumes/MAX/lara/s8_agent"
+            local project_path="${S8_AGENT_PATH:-/Volumes/MAX/lara/s8_agent}"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/s8_agent/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
