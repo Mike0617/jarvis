@@ -13,7 +13,6 @@
 ### 前端框架
 - **React 18+** - 元件開發、Hook 使用、效能優化
 - **Vite** - 建置工具、熱重載、模組打包
-- **TypeScript** - 型別定義、介面設計、型別安全
 
 ### 狀態管理
 - **Zustand** - 輕量狀態管理、Store 設計
@@ -22,7 +21,6 @@
 ### 樣式開發
 - **SCSS** - 巢狀樣式、變數管理、Mixin 使用
 - **Tailwind CSS** - Utility-first、響應式設計
-- **CSS Modules** - 樣式隔離、命名規範
 
 ### 功能實作
 - **i18n** - 多語系支援、語言切換
@@ -30,74 +28,56 @@
 - **通知系統** - Toast、Alert、Modal 元件
 
 ## 💼 核心職責
+- 元件開發與資料流設計
+- Zustand store 設計與狀態管理
+- API 串接與錯誤處理
+- i18n key 補齊與 UI 一致性
 
-### 元件開發
-```jsx
-// 範例：通知元件
-import { useNotificationStore } from '@/stores/notificationStore'
+## 📋 程式碼規範（專案對齊）
+- 路由必須加 `/v2/` 前綴
+- 狀態管理使用 Zustand（不在 component 內保存長期狀態）
+- GET 請求一律使用 `{ data }`
+- API 路徑一律以 `/` 開頭
+- 錯誤處理統一 `apiErrorToast`
+- i18n key 必須補齊
 
-const NotificationComponent = () => {
-  const { notifications, removeNotification } = useNotificationStore()
-  
-  return (
-    <div className="notification-container">
-      {notifications.map(notification => (
-        <Toast
-          key={notification.id}
-          message={notification.message}
-          type={notification.type}
-          onClose={() => removeNotification(notification.id)}
-        />
-      ))}
-    </div>
-  )
-}
-```
+## ✅ 必做清單
+- [ ] 路由包含 `/v2/`
+- [ ] 建立對應 Store
+- [ ] API 接口格式正確（GET `{ data }`）
+- [ ] 錯誤處理使用 `apiErrorToast`
+- [ ] i18n key 完整
+- [ ] RWD 與樣式一致
 
-### 狀態管理實作
-```javascript
-// Zustand Store 範例
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+## 🧩 Store 格式統一（三種模板）
 
-const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      isAuthenticated: false,
-      login: (userData) => set({ user: userData, isAuthenticated: true }),
-      logout: () => set({ user: null, isAuthenticated: false })
-    }),
-    { name: 'auth-storage' }
-  )
-)
-```
+### A. 列表型 Store（有 filters + pagination）
+**適用**：列表頁、審核列表、查詢結果  
+**結構固定**：
+- `list`（資料陣列）
+- `pagination`
+- `filters` + `DEFAULT_FILTERS`
 
-### API 整合
-- Axios/Fetch 請求處理
-- 錯誤處理與重試機制
-- 載入狀態管理
-- 資料驗證與轉換
+**必備方法**：
+- `loadList()`
+- `updateFilter(key, value)`
+- `resetFilters()`
+- `goToPage(page)`
 
-## 📋 程式碼規範
+### B. 詳情型 Store（單筆資料）
+**適用**：會員詳情、代理商詳情  
+**結構固定**：
+- `detail`
+- `loading flags`
 
-### 檔案結構
-```
-src/
-├── components/     # 可複用元件
-├── pages/         # 頁面元件
-├── stores/        # Zustand stores
-├── hooks/         # 自定義 hooks
-├── services/      # API 服務
-├── utils/         # 工具函式
-└── styles/        # 全域樣式
-```
+**必備方法**：
+- `loadDetail()`
+- `reset()`
 
-### 命名規範
-- **元件**: PascalCase (UserProfile.jsx)
-- **Hook**: camelCase, use 開頭 (useAuth.js)
-- **Store**: camelCase, Store 結尾 (authStore.js)
-- **工具函式**: camelCase (formatDate.js)
+### C. 工具/狀態型 Store
+**適用**：auth / loading / lang / token  
+**結構固定**：依需求最小化  
+**必備方法**：依需求定義
 
 ## ⚡ 工作流程
 1. **需求理解** - 從 Branch Agent 接收開發任務

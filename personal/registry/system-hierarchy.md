@@ -87,7 +87,7 @@
 3. **super-employee 權限是最高等級的員工權限**
 
 ### 前端顯示對應
-根據 `personal/project-agents.md` 中的定義：
+根據 `personal/registry/project-agents.md` 中的定義：
 - Level 1 agent → 顯示為「總公司」
 - Level 2 agent → 顯示為「分公司」
 - Level 3 agent → 顯示為「代理」
@@ -102,7 +102,7 @@
 ## 相關檔案
 - 會員詳情實作: `${S8_AGENT_PATH}/app/Http/Api/Controllers/Member/MemberDetailController.php`
 - 前端顯示: `${CASTER_WEB_PATH}/src/pages/members/detail/BasicInfo.jsx`
-- 專案代理規範: `personal/project-agents.md`
+- 專案代理規範: `personal/registry/project-agents.md`
 
 ---
 

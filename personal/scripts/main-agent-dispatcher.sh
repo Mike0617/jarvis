@@ -8,7 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ENV_FILE="$AGENT_ROOT_DEFAULT/.env"
 if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | xargs)
+    set -a
+    source "$ENV_FILE"
+    set +a
 fi
 
 # 設定
@@ -17,7 +19,7 @@ PROJECTS_DIR="$AGENT_ROOT/projects"
 PERSONAL_DIR="$AGENT_ROOT/personal"
 LOG_FILE="/tmp/main_agent_log"
 AGENT_CMD="${AGENT_CMD:-codex}"
-TEMPLATE_FILE="$PERSONAL_DIR/telegram-templates.md"
+TEMPLATE_FILE="${TELEGRAM_TEMPLATE_FILE:-}"
 START_TEMPLATE_KEY="1) 開始通知"
 COMPLETE_TEMPLATE_KEY="3) 完成通知"
 
@@ -72,20 +74,37 @@ requires_changes() {
 # 讀取指定模板內容（取出 Markdown code block 內文）
 get_template_block() {
     local key="$1"
-    if [ ! -f "$TEMPLATE_FILE" ]; then
+    if [ -n "$TEMPLATE_FILE" ] && [ -f "$TEMPLATE_FILE" ]; then
+        awk -v key="$key" '
+            $0 ~ "^### " {
+                inblock = ($0 ~ key)
+                incode = 0
+            }
+            inblock && $0 ~ "^```" {
+                if (!incode) { incode=1; next } else { exit }
+            }
+            inblock && incode { print }
+        ' "$TEMPLATE_FILE"
         return
     fi
 
-    awk -v key="$key" '
-        $0 ~ "^### " {
-            inblock = ($0 ~ key)
-            incode = 0
-        }
-        inblock && $0 ~ "^```" {
-            if (!incode) { incode=1; next } else { exit }
-        }
-        inblock && incode { print }
-    ' "$TEMPLATE_FILE"
+    if [ "$key" = "$START_TEMPLATE_KEY" ]; then
+        cat <<'EOF'
+{{STATUS_ICON}} [{{PROJECTS}}] 開始通知
+{{TASK}}
+{{SUBTASKS}}
+開始時間: {{START_TIME}}
+EOF
+        return
+    fi
+
+    cat <<'EOF'
+{{STATUS_ICON}} [{{PROJECTS}}] 完成通知
+{{TASK}}
+{{SUBTASKS}}
+執行結果: {{RESULT}}
+總用時: {{DURATION}} | 完成時間: {{END_TIME}}
+EOF
 }
 
 # 格式化耗時（秒 -> HH:MM）

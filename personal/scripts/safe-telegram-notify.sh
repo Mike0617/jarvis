@@ -8,7 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 ENV_FILE="$AGENT_ROOT_DEFAULT/.env"
 if [ -f "$ENV_FILE" ]; then
-    export $(grep -v '^#' "$ENV_FILE" | xargs)
+    set -a
+    source "$ENV_FILE"
+    set +a
 fi
 
 # 基本設定（從環境變數讀取）
