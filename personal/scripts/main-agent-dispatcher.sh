@@ -19,6 +19,8 @@ PROJECTS_DIR="$AGENT_ROOT/projects"
 PERSONAL_DIR="$AGENT_ROOT/personal"
 LOG_FILE="/tmp/main_agent_log"
 AGENT_CMD="${AGENT_CMD:-codex}"
+CODEX_SANDBOX_MODE="${CODEX_SANDBOX_MODE:-workspace-write}"
+CODEX_FULL_AUTO="${CODEX_FULL_AUTO:-1}"
 TEMPLATE_FILE="${TELEGRAM_TEMPLATE_FILE:-}"
 START_TEMPLATE_KEY="1) 開始通知"
 COMPLETE_TEMPLATE_KEY="3) 完成通知"
@@ -50,12 +52,29 @@ analyze_task() {
     if echo "$task" | grep -iE "(API|資料庫|伺服器|Laravel|業務邏輯|後端|s8_agent)" > /dev/null; then
         projects+=("s8_agent")
     fi
+
+    # MVC → API 轉換預設同時派發前後端
+    if echo "$task" | grep -iE "(mvc\\s*->\\s*api|mvc\\s*→\\s*api|mvc轉api|mvc轉\\s*api|前後分離)" > /dev/null; then
+        projects+=("s8_agent")
+        projects+=("caster-web")
+    fi
     
     # 部署關鍵字檢測
     if echo "$task" | grep -iE "(部署|CI/CD|Docker|伺服器|環境|deploy)" > /dev/null; then
         projects+=("caster-deploy")
     fi
     
+    # 去重（保持順序）
+    if [ ${#projects[@]} -gt 1 ]; then
+        local unique_projects=()
+        for project in "${projects[@]}"; do
+            if [[ ! " ${unique_projects[*]} " =~ " ${project} " ]]; then
+                unique_projects+=("$project")
+            fi
+        done
+        projects=("${unique_projects[@]}")
+    fi
+
     # 如果沒有明確匹配，預設給前端（因為目前主要在前端開發）
     if [ ${#projects[@]} -eq 0 ]; then
         projects=("caster-web")
@@ -63,6 +82,17 @@ analyze_task() {
     fi
     
     echo "${projects[@]}"
+}
+
+# 是否需要主代理通知（預設不通知，除非明確要求）
+should_send_main_notification() {
+    local task="$1"
+    local total_projects="$2"
+
+    if [ "$total_projects" -le 0 ]; then
+        return 1
+    fi
+    return 0
 }
 
 # 判斷是否需要檢查變更（避免回報完成但實際未改檔）
@@ -99,7 +129,7 @@ EOF
     fi
 
     cat <<'EOF'
-{{STATUS_ICON}} [{{PROJECTS}}] 完成通知
+{{STATUS_ICON}} [{{PROJECTS}}] {{STATUS_TITLE}}
 {{TASK}}
 {{SUBTASKS}}
 執行結果: {{RESULT}}
@@ -124,9 +154,10 @@ render_template() {
     local start_time="$4"
     local end_time="$5"
     local status_icon="$6"
-    local result_text="$7"
-    local duration="$8"
-    local estimated_duration="$9"
+    local status_title="$7"
+    local result_text="$8"
+    local duration="$9"
+    local estimated_duration="${10}"
 
     local output="$template"
     output="${output//\{\{TASK\}\}/$task}"
@@ -134,6 +165,7 @@ render_template() {
     output="${output//\{\{START_TIME\}\}/$start_time}"
     output="${output//\{\{END_TIME\}\}/$end_time}"
     output="${output//\{\{STATUS_ICON\}\}/$status_icon}"
+    output="${output//\{\{STATUS_TITLE\}\}/$status_title}"
     output="${output//\{\{RESULT\}\}/$result_text}"
     output="${output//\{\{DURATION\}\}/$duration}"
     output="${output//\{\{ESTIMATED_DURATION\}\}/$estimated_duration}"
@@ -147,9 +179,17 @@ run_agent_task() {
 
     if [ "$AGENT_CMD" = "codex" ]; then
         if [ -n "$CODEX_PROFILE" ]; then
-            codex exec -p "$CODEX_PROFILE" "$task"
+            if [ "$CODEX_FULL_AUTO" = "1" ]; then
+                codex exec -p "$CODEX_PROFILE" --full-auto "$task"
+            else
+                codex exec -p "$CODEX_PROFILE" -s "$CODEX_SANDBOX_MODE" "$task"
+            fi
         else
-            codex exec "$task"
+            if [ "$CODEX_FULL_AUTO" = "1" ]; then
+                codex exec --full-auto "$task"
+            else
+                codex exec -s "$CODEX_SANDBOX_MODE" "$task"
+            fi
         fi
         return $?
     fi
@@ -241,6 +281,7 @@ send_main_agent_notification() {
     local success="$4"
 
     local status_icon="🚀"
+    local status_title="完成通知"
     local result_text="專案代理已完成任務"
     local end_time=""
     local duration=""
@@ -248,12 +289,14 @@ send_main_agent_notification() {
     if [ "$phase" = "complete" ]; then
         if [ "$success" = "1" ]; then
             status_icon="✅"
+            status_title="完成通知"
             result_text="專案代理已完成任務"
         else
             status_icon="❌"
+            status_title="失敗通知"
             result_text="部分專案代理執行失敗"
         fi
-        end_time=$(date +%H:%M)
+        end_time=$(date +"%F %H:%M")
         if [ -n "$START_EPOCH" ]; then
             duration=$(format_duration $(( $(date +%s) - START_EPOCH )))
         else
@@ -280,6 +323,7 @@ send_main_agent_notification() {
         "$START_TIME" \
         "$end_time" \
         "$status_icon" \
+        "$status_title" \
         "$result_text" \
         "$duration" \
         "未估")
@@ -296,7 +340,7 @@ main() {
     echo "🧠 分析任務中..." | tee -a "$LOG_FILE"
 
     START_EPOCH=$(date +%s)
-    START_TIME=$(date +%H:%M)
+    START_TIME=$(date +"%F %H:%M")
     
     # 分析任務
     INVOLVED_PROJECTS=($(analyze_task "$TASK_DESCRIPTION"))
@@ -305,7 +349,7 @@ main() {
     echo "📋 涉及專案: $PROJECTS_STR" | tee -a "$LOG_FILE"
     
     # 開始通知已停用，僅由子代理發送結果通知
-    
+
     # 執行各專案代理
     SUCCESS_COUNT=0
     for project in "${INVOLVED_PROJECTS[@]}"; do
@@ -318,7 +362,16 @@ main() {
     TOTAL_PROJECTS=${#INVOLVED_PROJECTS[@]}
     echo "📊 執行結果: $SUCCESS_COUNT/$TOTAL_PROJECTS 個專案代理成功" | tee -a "$LOG_FILE"
     
-    # 主代理不發送完成通知；結果通知由子代理負責
+    # 跨專案時，主代理發送總結通知（預設不通知，除非明確要求）
+    if should_send_main_notification "$TASK_DESCRIPTION" "$TOTAL_PROJECTS"; then
+        local success_flag=1
+        if [ $SUCCESS_COUNT -ne $TOTAL_PROJECTS ]; then
+            success_flag=0
+        fi
+        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "$success_flag"
+    fi
+
+    # 結果提示
     if [ $SUCCESS_COUNT -eq $TOTAL_PROJECTS ]; then
         echo "🎉 Edwin Jarvis 任務執行完成！" | tee -a "$LOG_FILE"
     else

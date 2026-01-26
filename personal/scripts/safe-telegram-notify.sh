@@ -37,6 +37,9 @@ if [ -z "$MESSAGE" ]; then
     exit 1
 fi
 
+# 將字面 "\n" 轉成換行
+MESSAGE="${MESSAGE//\\n/$'\n'}"
+
 # 先寫入佇列，避免通知被跳過（用 base64 保留多行）
 ENCODED_MESSAGE=$(printf '%s' "$MESSAGE" | base64 | tr -d '\n')
 echo "$ENCODED_MESSAGE" >> "$QUEUE_FILE"

@@ -10,8 +10,13 @@
 ${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任務完成"
 ```
 
+## 通知規則
+- 未派發任務預設不發通知；除非用戶明確要求
+- 跨專案任務由主代理發送總結通知
+
 ## 可用變數
 - `{{STATUS_ICON}}`
+- `{{STATUS_TITLE}}`
 - `{{PROJECTS}}`
 - `{{TASK}}`
 - `{{SUBTASKS}}`
@@ -40,7 +45,7 @@ ${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任�
 
 ### 3) 完成通知
 ```
-{{STATUS_ICON}} [{{PROJECTS}}] 完成通知
+{{STATUS_ICON}} [{{PROJECTS}}] {{STATUS_TITLE}}
 {{TASK}}
 {{SUBTASKS}}
 執行結果: {{RESULT}}
@@ -64,5 +69,5 @@ ${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任�
 - 任務: 任務描述
 - 結果: 最終結論或處理結果
 - 依據: 檔案/路由/紀錄等依據
-- 完成時間: HH:MM
+- 完成時間: YYYY-MM-DD HH:MM
 ```
