@@ -3,9 +3,14 @@
 # Safe Telegram Notification Script
 # 防止刷屏機制的 Telegram 通知腳本
 
-# 載入環境變數
-if [ -f "/Volumes/MAX/agent/.env" ]; then
-    export $(cat "/Volumes/MAX/agent/.env" | grep -v '^#' | xargs)
+# 載入環境變數（支援集中管理路徑）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AGENT_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENV_FILE="$AGENT_ROOT_DEFAULT/.env"
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
 fi
 
 # 基本設定（從環境變數讀取）
@@ -15,7 +20,7 @@ CHAT_ID="${TELEGRAM_CHAT_ID}"
 # 檢查必要的環境變數
 if [ -z "$BOT_TOKEN" ] || [ -z "$CHAT_ID" ]; then
     echo "❌ 錯誤: 未設定 TELEGRAM_BOT_TOKEN 或 TELEGRAM_CHAT_ID 環境變數"
-    echo "請在 /Volumes/MAX/agent/.env 中設定"
+    echo "請在 $ENV_FILE 中設定"
     exit 1
 fi
 
@@ -31,6 +36,9 @@ if [ -z "$MESSAGE" ]; then
     echo "❌ 使用方式: $0 \"通知訊息\""
     exit 1
 fi
+
+# 將字面 "\n" 轉成換行
+MESSAGE="${MESSAGE//\\n/$'\n'}"
 
 # 先寫入佇列，避免通知被跳過（用 base64 保留多行）
 ENCODED_MESSAGE=$(printf '%s' "$MESSAGE" | base64 | tr -d '\n')

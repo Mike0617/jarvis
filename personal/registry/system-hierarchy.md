@@ -8,7 +8,7 @@
 
 ---
 
-## Level 0 - 集團層級
+## Level 0 - 集團層級（company）
 
 ### 1. 集團帳號（集團代理）
 - **level**: 0
@@ -28,7 +28,7 @@
 
 ---
 
-## Level 1 - 總公司層級
+## Level 1 - 總公司層級（partner）
 
 ### 1. 總公司帳號（總公司代理）
 - **level**: 1
@@ -42,7 +42,7 @@
 
 ---
 
-## Level 2 - 分公司層級
+## Level 2 - 分公司層級（main_agent）
 
 ### 1. 分公司帳號（分公司代理）
 - **level**: 2
@@ -56,7 +56,7 @@
 
 ---
 
-## Level 3 - 代理層級
+## Level 3 - 代理層級（agent）
 
 ### 1. 代理帳號
 - **level**: 3
@@ -70,7 +70,7 @@
 
 ---
 
-## Level 4 - 會員層級
+## Level 4 - 會員層級（user）
 
 ### 1. 會員帳號
 - **level**: 4
@@ -87,7 +87,7 @@
 3. **super-employee 權限是最高等級的員工權限**
 
 ### 前端顯示對應
-根據 `personal/project-agents.md` 中的定義：
+根據 `personal/registry/project-agents.md` 中的定義：
 - Level 1 agent → 顯示為「總公司」
 - Level 2 agent → 顯示為「分公司」
 - Level 3 agent → 顯示為「代理」
@@ -100,9 +100,9 @@
 ---
 
 ## 相關檔案
-- 會員詳情實作: `/Users/miketseng/Documents/lara/s8_agent/app/Http/Api/Controllers/Member/MemberDetailController.php`
-- 前端顯示: `/Users/miketseng/Documents/project/web-agent/src/pages/members/detail/BasicInfo.jsx`
-- 專案代理規範: `personal/project-agents.md`
+- 會員詳情實作: `${S8_AGENT_PATH}/app/Http/Api/Controllers/Member/MemberDetailController.php`
+- 前端顯示: `${CASTER_WEB_PATH}/src/pages/members/detail/BasicInfo.jsx`
+- 專案代理規範: `personal/registry/project-agents.md`
 
 ---
 

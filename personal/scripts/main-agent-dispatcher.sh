@@ -3,12 +3,25 @@
 # Edwin Jarvis - 個人主代理任務分配腳本
 # Edwin Jarvis Personal Main Agent Task Dispatcher
 
+# 載入環境變數（支援集中管理路徑）
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AGENT_ROOT_DEFAULT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ENV_FILE="$AGENT_ROOT_DEFAULT/.env"
+if [ -f "$ENV_FILE" ]; then
+    set -a
+    source "$ENV_FILE"
+    set +a
+fi
+
 # 設定
-PROJECTS_DIR="/Volumes/MAX/agent/projects"
-PERSONAL_DIR="/Volumes/MAX/agent/personal"
+AGENT_ROOT="${AGENT_ROOT:-$AGENT_ROOT_DEFAULT}"
+PROJECTS_DIR="$AGENT_ROOT/projects"
+PERSONAL_DIR="$AGENT_ROOT/personal"
 LOG_FILE="/tmp/main_agent_log"
 AGENT_CMD="${AGENT_CMD:-codex}"
-TEMPLATE_FILE="/Volumes/MAX/agent/personal/telegram-templates.md"
+CODEX_SANDBOX_MODE="${CODEX_SANDBOX_MODE:-workspace-write}"
+CODEX_FULL_AUTO="${CODEX_FULL_AUTO:-1}"
+TEMPLATE_FILE="${TELEGRAM_TEMPLATE_FILE:-}"
 START_TEMPLATE_KEY="1) 開始通知"
 COMPLETE_TEMPLATE_KEY="3) 完成通知"
 
@@ -39,12 +52,34 @@ analyze_task() {
     if echo "$task" | grep -iE "(API|資料庫|伺服器|Laravel|業務邏輯|後端|s8_agent)" > /dev/null; then
         projects+=("s8_agent")
     fi
+
+    # Apidog 文件化關鍵字檢測
+    if echo "$task" | grep -iE "(apidog|api\\s*doc|api\\s*文件|api\\s*文檔|api\\s*規格|api\\s*說明)" > /dev/null; then
+        projects+=("apidog-agent")
+    fi
+
+    # MVC → API 轉換預設同時派發前後端
+    if echo "$task" | grep -iE "(mvc\\s*->\\s*api|mvc\\s*→\\s*api|mvc轉api|mvc轉\\s*api|前後分離)" > /dev/null; then
+        projects+=("s8_agent")
+        projects+=("caster-web")
+    fi
     
     # 部署關鍵字檢測
     if echo "$task" | grep -iE "(部署|CI/CD|Docker|伺服器|環境|deploy)" > /dev/null; then
         projects+=("caster-deploy")
     fi
     
+    # 去重（保持順序）
+    if [ ${#projects[@]} -gt 1 ]; then
+        local unique_projects=()
+        for project in "${projects[@]}"; do
+            if [[ ! " ${unique_projects[*]} " =~ " ${project} " ]]; then
+                unique_projects+=("$project")
+            fi
+        done
+        projects=("${unique_projects[@]}")
+    fi
+
     # 如果沒有明確匹配，預設給前端（因為目前主要在前端開發）
     if [ ${#projects[@]} -eq 0 ]; then
         projects=("caster-web")
@@ -52,6 +87,17 @@ analyze_task() {
     fi
     
     echo "${projects[@]}"
+}
+
+# 是否需要主代理通知（預設不通知，除非明確要求）
+should_send_main_notification() {
+    local task="$1"
+    local total_projects="$2"
+
+    if [ "$total_projects" -le 0 ]; then
+        return 1
+    fi
+    return 0
 }
 
 # 判斷是否需要檢查變更（避免回報完成但實際未改檔）
@@ -63,20 +109,37 @@ requires_changes() {
 # 讀取指定模板內容（取出 Markdown code block 內文）
 get_template_block() {
     local key="$1"
-    if [ ! -f "$TEMPLATE_FILE" ]; then
+    if [ -n "$TEMPLATE_FILE" ] && [ -f "$TEMPLATE_FILE" ]; then
+        awk -v key="$key" '
+            $0 ~ "^### " {
+                inblock = ($0 ~ key)
+                incode = 0
+            }
+            inblock && $0 ~ "^```" {
+                if (!incode) { incode=1; next } else { exit }
+            }
+            inblock && incode { print }
+        ' "$TEMPLATE_FILE"
         return
     fi
 
-    awk -v key="$key" '
-        $0 ~ "^### " {
-            inblock = ($0 ~ key)
-            incode = 0
-        }
-        inblock && $0 ~ "^```" {
-            if (!incode) { incode=1; next } else { exit }
-        }
-        inblock && incode { print }
-    ' "$TEMPLATE_FILE"
+    if [ "$key" = "$START_TEMPLATE_KEY" ]; then
+        cat <<'EOF'
+{{STATUS_ICON}} [{{PROJECTS}}] 開始通知
+{{TASK}}
+{{SUBTASKS}}
+開始時間: {{START_TIME}}
+EOF
+        return
+    fi
+
+    cat <<'EOF'
+{{STATUS_ICON}} [{{PROJECTS}}] {{STATUS_TITLE}}
+{{TASK}}
+{{SUBTASKS}}
+執行結果: {{RESULT}}
+總用時: {{DURATION}} | 完成時間: {{END_TIME}}
+EOF
 }
 
 # 格式化耗時（秒 -> HH:MM）
@@ -96,9 +159,10 @@ render_template() {
     local start_time="$4"
     local end_time="$5"
     local status_icon="$6"
-    local result_text="$7"
-    local duration="$8"
-    local estimated_duration="$9"
+    local status_title="$7"
+    local result_text="$8"
+    local duration="$9"
+    local estimated_duration="${10}"
 
     local output="$template"
     output="${output//\{\{TASK\}\}/$task}"
@@ -106,6 +170,7 @@ render_template() {
     output="${output//\{\{START_TIME\}\}/$start_time}"
     output="${output//\{\{END_TIME\}\}/$end_time}"
     output="${output//\{\{STATUS_ICON\}\}/$status_icon}"
+    output="${output//\{\{STATUS_TITLE\}\}/$status_title}"
     output="${output//\{\{RESULT\}\}/$result_text}"
     output="${output//\{\{DURATION\}\}/$duration}"
     output="${output//\{\{ESTIMATED_DURATION\}\}/$estimated_duration}"
@@ -119,9 +184,17 @@ run_agent_task() {
 
     if [ "$AGENT_CMD" = "codex" ]; then
         if [ -n "$CODEX_PROFILE" ]; then
-            codex exec -p "$CODEX_PROFILE" "$task"
+            if [ "$CODEX_FULL_AUTO" = "1" ]; then
+                codex exec -p "$CODEX_PROFILE" --full-auto "$task"
+            else
+                codex exec -p "$CODEX_PROFILE" -s "$CODEX_SANDBOX_MODE" "$task"
+            fi
         else
-            codex exec "$task"
+            if [ "$CODEX_FULL_AUTO" = "1" ]; then
+                codex exec --full-auto "$task"
+            else
+                codex exec -s "$CODEX_SANDBOX_MODE" "$task"
+            fi
         fi
         return $?
     fi
@@ -143,7 +216,7 @@ execute_project_agent() {
     
     case "$project" in
         "caster-web")
-            local project_path="/Volumes/MAX/Project/Caster-Web"
+            local project_path="${CASTER_WEB_PATH:-/Volumes/MAX/Project/Caster-Web}"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/caster-web/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
@@ -173,7 +246,7 @@ execute_project_agent() {
             fi
             ;;
         "s8_agent")
-            local project_path="/Volumes/MAX/lara/s8_agent"
+            local project_path="${S8_AGENT_PATH:-/Volumes/MAX/lara/s8_agent}"
             if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/s8_agent/CLAUDE.md" ]; then
                 echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
                 cd "$project_path" || return 1
@@ -182,6 +255,28 @@ execute_project_agent() {
                 run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
+                if [ $exit_code -eq 0 ]; then
+                    echo "✅ $project 代理執行完成" | tee -a "$LOG_FILE"
+                    return 0
+                else
+                    echo "❌ $project 代理執行失敗 (退出碼: $exit_code)" | tee -a "$LOG_FILE"
+                    return 1
+                fi
+            else
+                echo "❌ $project 專案目錄或設定檔不存在" | tee -a "$LOG_FILE"
+                return 1
+            fi
+            ;;
+        "apidog-agent")
+            local project_path="${AGENT_ROOT}/projects/apidog-agent"
+            if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/apidog-agent/CLAUDE.md" ]; then
+                echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
+                cd "$project_path" || return 1
+
+                echo "🤖 啟動 ${AGENT_CMD} 執行任務..." | tee -a "$LOG_FILE"
+                run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
+                local exit_code=${PIPESTATUS[1]}
+
                 if [ $exit_code -eq 0 ]; then
                     echo "✅ $project 代理執行完成" | tee -a "$LOG_FILE"
                     return 0
@@ -213,6 +308,7 @@ send_main_agent_notification() {
     local success="$4"
 
     local status_icon="🚀"
+    local status_title="完成通知"
     local result_text="專案代理已完成任務"
     local end_time=""
     local duration=""
@@ -220,12 +316,14 @@ send_main_agent_notification() {
     if [ "$phase" = "complete" ]; then
         if [ "$success" = "1" ]; then
             status_icon="✅"
+            status_title="完成通知"
             result_text="專案代理已完成任務"
         else
             status_icon="❌"
+            status_title="失敗通知"
             result_text="部分專案代理執行失敗"
         fi
-        end_time=$(date +%H:%M)
+        end_time=$(date +"%F %H:%M")
         if [ -n "$START_EPOCH" ]; then
             duration=$(format_duration $(( $(date +%s) - START_EPOCH )))
         else
@@ -252,6 +350,7 @@ send_main_agent_notification() {
         "$START_TIME" \
         "$end_time" \
         "$status_icon" \
+        "$status_title" \
         "$result_text" \
         "$duration" \
         "未估")
@@ -268,7 +367,7 @@ main() {
     echo "🧠 分析任務中..." | tee -a "$LOG_FILE"
 
     START_EPOCH=$(date +%s)
-    START_TIME=$(date +%H:%M)
+    START_TIME=$(date +"%F %H:%M")
     
     # 分析任務
     INVOLVED_PROJECTS=($(analyze_task "$TASK_DESCRIPTION"))
@@ -277,7 +376,7 @@ main() {
     echo "📋 涉及專案: $PROJECTS_STR" | tee -a "$LOG_FILE"
     
     # 開始通知已停用，僅由子代理發送結果通知
-    
+
     # 執行各專案代理
     SUCCESS_COUNT=0
     for project in "${INVOLVED_PROJECTS[@]}"; do
@@ -290,7 +389,16 @@ main() {
     TOTAL_PROJECTS=${#INVOLVED_PROJECTS[@]}
     echo "📊 執行結果: $SUCCESS_COUNT/$TOTAL_PROJECTS 個專案代理成功" | tee -a "$LOG_FILE"
     
-    # 主代理不發送完成通知；結果通知由子代理負責
+    # 跨專案時，主代理發送總結通知（預設不通知，除非明確要求）
+    if should_send_main_notification "$TASK_DESCRIPTION" "$TOTAL_PROJECTS"; then
+        local success_flag=1
+        if [ $SUCCESS_COUNT -ne $TOTAL_PROJECTS ]; then
+            success_flag=0
+        fi
+        send_main_agent_notification "complete" "$PROJECTS_STR" "$TASK_DESCRIPTION" "$success_flag"
+    fi
+
+    # 結果提示
     if [ $SUCCESS_COUNT -eq $TOTAL_PROJECTS ]; then
         echo "🎉 Edwin Jarvis 任務執行完成！" | tee -a "$LOG_FILE"
     else
