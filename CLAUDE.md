@@ -16,10 +16,9 @@
 - **子代理**: 專案內特定工作流程代理（Branch、Code、Review、Notify）
 
 ### 關鍵管理檔案
-- `MAIN-AGENT.md`: 主代理職責和任務分配邏輯
 - `personal/project-agents.md`: 完整的專案代理註冊表和工作流程
-- `PROJECT_ARCHITECTURE.md`: 專案關係文件
 - `HOW-TO-USE.md`: 代理系統使用指南
+- `.env`: 專案與工具路徑變數
 
 ## 重要使用原則
 
@@ -43,18 +42,17 @@
 ### 任務分派
 ```bash
 # 預設方法 - 透過主代理分派器（必要時可直接處理）
-/Volumes/MAX/agent/personal/scripts/main-agent-dispatcher.sh "任務描述"
+${AGENT_ROOT}/personal/scripts/main-agent-dispatcher.sh "任務描述"
 ```
 
 ### Telegram 通知
 ```bash
 # 安全通知（防刷屏保護，60秒冷卻時間）
-/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任務完成"
+${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh "✅ [專案名稱] 任務完成"
 ```
 
 ### 專案導航
-- **caster-web 專案**: `/Volumes/MAX/Project/Caster-Web`
-- **s8_agent 專案**: `/Volumes/MAX/lara/s8_agent`
+- 專案路徑請參考 `.env` 的路徑變數
 
 ## 開發標準
 
@@ -111,6 +109,12 @@ Edwin Jarvis 分析自然語言指令並根據關鍵字路由:
 - 後端關鍵字（API、資料庫、Laravel、業務邏輯）→ s8_agent 代理
 - 跨專案任務 → 協調執行與依賴管理
 
+### 跨專案判斷規則（摘要）
+- 同時包含「畫面/UI」與「API/資料庫」 → 視為跨專案
+- 需求明確點名兩個專案 → 視為跨專案
+- 需要前端對接後端新 API → 視為跨專案（先後端、再前端）
+- 無法判斷歸屬 → 預設分派給 caster-web，並提示是否需後端協作
+
 ### 主代理核心職責
 1. **指令接收與分析**: 接收自然語言指令，分析任務類型、涉及專案、優先級
 2. **智能任務分配**: 自動分配給對應專案代理，協調跨專案執行順序
@@ -122,6 +126,11 @@ Edwin Jarvis 分析自然語言指令並根據關鍵字路由:
 - **s8_agent**: Laravel 後端 MVC + API 並存（漸進式轉換為前後分離）
   - CLAUDE.md 路徑: `projects/s8_agent/CLAUDE.md`
 - **caster-deploy**: DevOps 部署管理（計劃中）
+
+### 規範來源優先序
+1. `personal/project-agents.md`（專案規範與工作流程）
+2. `projects/*/CLAUDE.md`（專案特例與補充）
+3. `CLAUDE.md`（通用規範摘要）
 
 ### 專案代理檢查原則
 當需要驗證專案代理 CLAUDE.md 時：

@@ -53,7 +53,7 @@
 完成任務後會透過 Telegram 自動通知：
 
 ### 通知方式
-使用安全防刷腳本：`/Volumes/MAX/agent/personal/scripts/safe-telegram-notify.sh`
+使用安全防刷腳本：`${AGENT_ROOT}/personal/scripts/safe-telegram-notify.sh`
 
 **防刷機制**：
 - 最少間隔 60 秒才能發送下一則通知

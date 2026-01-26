@@ -1,10 +1,11 @@
 # Project Agents 管理表
 
 本檔案用來登記所有專案代理人，Edwin Jarvis 可以根據這份清單調度專案代理人。
+專案路徑以 `.env` 的路徑變數為準。
 
 ---
 ## 📌 caster-web 專案代理人
-- **專案路徑**: /Volumes/MAX/Project/Caster-Web
+- **專案路徑**: ${CASTER_WEB_PATH}
 - **代理人路徑**: ../projects/caster-web/
 - **專案架構**: 前端專案 (React + Vite + Zustand + SCSS/Tailwind)
 - **專案性質**: s8_agent 專案前後分離架構轉換的前端部分
@@ -50,7 +51,7 @@
 
 ---
 ## 📌 s8_agent 專案代理人
-- **專案路徑**: /Volumes/MAX/lara/s8_agent
+- **專案路徑**: ${S8_AGENT_PATH}
 - **專案架構**: Laravel MVC + API 並存
 - **專案性質**: MVC 與 API 雙軌運行，逐步轉換為前後分離架構
 - **API 路徑規則**: 所有 API 路由都使用 `/api/` 前綴 (注意：`/v2/` 是前端路由，不是 API 路由)
