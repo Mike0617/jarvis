@@ -3,6 +3,11 @@
 本檔案僅作為專案註冊表，完整規範請參考 `personal/CORE.md`。
 
 ## 專案清單
+- **apidog-agent**
+  - 路徑：`${AGENT_ROOT}/projects/apidog-agent`
+  - 角色：Apidog 專案代理（API 變更文件化）
+  - 特例：每次新增/修改 API 必須同步 Apidog
+
 - **caster-web**
   - 路徑：`${CASTER_WEB_PATH}`
   - 角色：前端專案代理

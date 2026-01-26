@@ -53,6 +53,11 @@ analyze_task() {
         projects+=("s8_agent")
     fi
 
+    # Apidog 文件化關鍵字檢測
+    if echo "$task" | grep -iE "(apidog|api\\s*doc|api\\s*文件|api\\s*文檔|api\\s*規格|api\\s*說明)" > /dev/null; then
+        projects+=("apidog-agent")
+    fi
+
     # MVC → API 轉換預設同時派發前後端
     if echo "$task" | grep -iE "(mvc\\s*->\\s*api|mvc\\s*→\\s*api|mvc轉api|mvc轉\\s*api|前後分離)" > /dev/null; then
         projects+=("s8_agent")
@@ -250,6 +255,28 @@ execute_project_agent() {
                 run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
                 local exit_code=${PIPESTATUS[1]}
                 
+                if [ $exit_code -eq 0 ]; then
+                    echo "✅ $project 代理執行完成" | tee -a "$LOG_FILE"
+                    return 0
+                else
+                    echo "❌ $project 代理執行失敗 (退出碼: $exit_code)" | tee -a "$LOG_FILE"
+                    return 1
+                fi
+            else
+                echo "❌ $project 專案目錄或設定檔不存在" | tee -a "$LOG_FILE"
+                return 1
+            fi
+            ;;
+        "apidog-agent")
+            local project_path="${AGENT_ROOT}/projects/apidog-agent"
+            if [ -d "$project_path" ] && [ -f "$PROJECTS_DIR/apidog-agent/CLAUDE.md" ]; then
+                echo "📁 切換到專案目錄: $project_path" | tee -a "$LOG_FILE"
+                cd "$project_path" || return 1
+
+                echo "🤖 啟動 ${AGENT_CMD} 執行任務..." | tee -a "$LOG_FILE"
+                run_agent_task "$task" 2>&1 | tee -a "$LOG_FILE"
+                local exit_code=${PIPESTATUS[1]}
+
                 if [ $exit_code -eq 0 ]; then
                     echo "✅ $project 代理執行完成" | tee -a "$LOG_FILE"
                     return 0
