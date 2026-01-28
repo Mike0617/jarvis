@@ -5,6 +5,7 @@
 ## 必讀文件
 - `personal/CORE.md`
 - `personal/registry/project-agents.md`
+- `personal/registry/project-architecture.md`
 
 ## 路徑與環境變數
 - 所有路徑統一由 `.env` 管理
